@@ -2,6 +2,7 @@ package com.ana.agendamento;
 
 import java.time.LocalDateTime;
 
+import com.ana.agendamento.facade.SistemaFacade;
 import com.ana.agendamento.model.Agenda;
 import com.ana.agendamento.model.Consulta;
 import com.ana.agendamento.model.Medico;
@@ -9,18 +10,15 @@ import com.ana.agendamento.model.Paciente;
 
 public class App {
     public static void main(String[] args) {
-        System.out.println("=== Sistema de Agendamento UNIPAR ===");
+        System.out.println("=== CLINICA ANA ELISA - SISTEMA DE AGENDAMENTO ===");
 
-        // Criando instâncias do model
-        Paciente p = new Paciente("Ana Elisa", "123.456.789-00", "ana.neves", "senha123");
-        Medico m = new Medico("Dr. Rodrigo", "Ortopedia", "rodrigo.tomazi", "doc456");
+        Paciente paciente = new Paciente("Ana", "111.222.333-44", "ana.user", "123");
+        Medico medico = new Medico("Dr. Rodrigo", "Engenharia de Software", "rodrigo.doc", "456");
 
-        Consulta c = new Consulta(p, m, LocalDateTime.now());
+        SistemaFacade clinica = new SistemaFacade();
+        
+        clinica.agendarConsulta(paciente, medico, LocalDateTime.now());
 
-        Agenda agenda = new Agenda();
-        agenda.adicionarConsulta(c);
-
-        // Saída no terminal
-        System.out.println("Sucesso! " + agenda.getConsultas().get(0));
+        clinica.cancelarConsulta(101);
     }
 }
