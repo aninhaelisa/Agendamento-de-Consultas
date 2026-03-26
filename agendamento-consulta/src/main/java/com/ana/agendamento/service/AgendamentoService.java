@@ -18,4 +18,6 @@ public class AgendamentoService {
     public void agendar(Consulta consulta) {
         repository.salvar(consulta);
     }
+
+    
 }
