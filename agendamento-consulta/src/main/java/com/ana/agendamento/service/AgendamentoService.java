@@ -11,13 +11,13 @@ public class AgendamentoService {
         this.repository = repository;
     }
 
-    public boolean verificarDisponibilidade(LocalDateTime data) {
-        return true; 
+    public boolean verificarDisponibilidade(String nomeMedico, LocalDateTime data) {
+        return repository.listarTodas().stream()
+                .noneMatch(c -> c.getMedico().getNome().equalsIgnoreCase(nomeMedico) 
+                           && c.getDataHora().equals(data));
     }
 
     public void agendar(Consulta consulta) {
         repository.salvar(consulta);
     }
-
-    
 }

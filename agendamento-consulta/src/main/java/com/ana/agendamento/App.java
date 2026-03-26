@@ -1,78 +1,111 @@
 package com.ana.agendamento;
 
 import com.ana.agendamento.facade.SistemaFacade;
-import com.ana.agendamento.model.Medico;
-import com.ana.agendamento.model.Paciente;
+import com.ana.agendamento.model.*;
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.util.List;
 import java.util.Scanner;
 
 public class App {
     public static void main(String[] args) {
         SistemaFacade sistema = new SistemaFacade();
-        Scanner scanner = new Scanner(System.in);
-        int opcao = 0;
+        Scanner sc = new Scanner(System.in);
+        DateTimeFormatter fmt = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm");
+        Usuario logado = null;
 
-        while (opcao != 6) {
-            System.out.println("\n--- SISTEMA UNIPAR: AGENDAMENTO ---");
-            System.out.println("1. Cadastrar Paciente");
-            System.out.println("2. Cadastrar Médico");
-            System.out.println("3. Agendar Consulta");
-            System.out.println("4. Cancelar Consulta");
-            System.out.println("5. Login (Simulação)");
-            System.out.println("6. Sair");
-            System.out.print("Escolha uma opção: ");
-            
-            opcao = scanner.nextInt();
-            scanner.nextLine(); // Limpar o buffer
+        while (true) {
+            if (logado == null) {
+                System.out.println("\n--- SISTEMA DE AGENDAMENTO ---");
+                System.out.println("1. Login");
+                System.out.println("2. Cadastrar Paciente");
+                System.out.println("3. Cadastrar Medico");
+                System.out.println("4. Sair");
+                System.out.print("Escolha: ");
+                
+                int op = sc.nextInt();
+                sc.nextLine(); 
 
-            switch (opcao) {
-                case 1:
-                    System.out.print("Nome do Paciente: ");
-                    String nomeP = scanner.nextLine();
-                    System.out.print("CPF: ");
-                    String cpf = scanner.nextLine();
-                    sistema.cadastrarPaciente(nomeP, cpf, "user." + nomeP.toLowerCase(), "123");
+                if (op == 1) {
+                    System.out.print("Login: ");
+                    String l = sc.nextLine();
+                    System.out.print("Senha: ");
+                    String s = sc.nextLine();
+                    logado = sistema.realizarLogin(l, s);
+                    if (logado == null) System.out.println("Erro: Usuario nao encontrado.");
+                } else if (op == 2) {
+                    System.out.print("Nome: "); String n = sc.nextLine();
+                    System.out.print("CPF: "); String c = sc.nextLine();
+                    System.out.print("Login: "); String lg = sc.nextLine();
+                    System.out.print("Senha: "); String sn = sc.nextLine();
+                    sistema.cadastrarPaciente(n, c, lg, sn);
+                    System.out.println("Paciente cadastrado com sucesso!");
+                } else if (op == 3) {
+                    System.out.print("Nome: "); String n = sc.nextLine();
+                    System.out.print("Especialidade: "); String e = sc.nextLine();
+                    System.out.print("Login: "); String lg = sc.nextLine();
+                    System.out.print("Senha: "); String sn = sc.nextLine();
+                    sistema.cadastrarMedico(n, e, lg, sn);
+                    System.out.println("Medico cadastrado com sucesso!");
+                } else if (op == 4) {
                     break;
+                }
+            } else {
+                System.out.println("\nLogado como: " + logado.getLogin());
+                
+                if (logado instanceof Paciente) {
+                    System.out.println("1. Agendar Consulta");
+                    System.out.println("2. Logout");
+                    System.out.print("Escolha: ");
+                    int opP = sc.nextInt();
+                    sc.nextLine();
 
-                case 2:
-                    System.out.print("Nome do Médico: ");
-                    String nomeM = scanner.nextLine();
-                    System.out.print("Especialidade: ");
-                    String esp = scanner.nextLine();
-                    sistema.cadastrarMedico(nomeM, esp, "doc." + nomeM.toLowerCase(), "456");
-                    break;
+                    if (opP == 1) {
+                        List<Medico> meds = sistema.listarMedicos();
+                        if (meds.isEmpty()) {
+                            System.out.println("Nao ha medicos cadastrados.");
+                        } else {
+                            for (int i = 0; i < meds.size(); i++) {
+                                System.out.println((i + 1) + ". " + meds.get(i).getNome() + " (" + meds.get(i).getEspecialidade() + ")");
+                            }
+                            System.out.print("Selecione o medico: ");
+                            int sel = sc.nextInt() - 1;
+                            sc.nextLine();
 
-                case 3:
-                    System.out.print("CPF do Paciente: ");
-                    String buscaCpf = scanner.nextLine();
-                    Paciente p = sistema.obterPaciente(buscaCpf);
-                    if (p != null) {
-                        // Usando um médico genérico para o teste rápido
-                        Medico m = new Medico("Dr. Rodrigo", "Geral", "doc", "123");
-                        sistema.agendarConsulta(p, m, LocalDateTime.now().plusDays(1));
+                            if (sel >= 0 && sel < meds.size()) {
+                                System.out.print("Data e Hora (dd/MM/yyyy HH:mm): ");
+                                try {
+                                    String dataStr = sc.nextLine();
+                                    LocalDateTime dt = LocalDateTime.parse(dataStr, fmt);
+                                    sistema.agendar((Paciente) logado, meds.get(sel), dt);
+                                    System.out.println("Agendamento realizado!");
+                                } catch (Exception e) {
+                                    System.out.println("Erro no formato da data.");
+                                }
+                            }
+                        }
                     } else {
-                        System.out.println("Erro: Paciente não encontrado!");
+                        logado = null;
                     }
-                    break;
+                } else if (logado instanceof Medico) {
+                    System.out.println("1. Ver Minha Agenda");
+                    System.out.println("2. Logout");
+                    System.out.print("Escolha: ");
+                    int opM = sc.nextInt();
+                    sc.nextLine();
 
-                case 4:
-                    System.out.print("ID da Consulta para cancelar: ");
-                    int id = scanner.nextInt();
-                    sistema.cancelarConsulta(id);
-                    break;
-
-                case 5:
-                    System.out.println("Funcionalidade de Login integrada ao AuthService!");
-                    break;
-
-                case 6:
-                    System.out.println("Encerrando o sistema...");
-                    break;
-
-                default:
-                    System.out.println("Opção inválida!");
+                    if (opM == 1) {
+                        List<Consulta> agenda = sistema.verAgenda(((Medico) logado).getNome());
+                        if (agenda.isEmpty()) {
+                            System.out.println("Sua agenda esta vazia.");
+                        } else {
+                            agenda.forEach(System.out::println);
+                        }
+                    } else {
+                        logado = null;
+                    }
+                }
             }
         }
-        scanner.close();
     }
 }

@@ -1,53 +1,51 @@
 package com.ana.agendamento.facade;
 
 import com.ana.agendamento.model.*;
-import com.ana.agendamento.factory.ConsultaFactory;
 import com.ana.agendamento.repository.*;
 import com.ana.agendamento.service.*;
 import java.time.LocalDateTime;
+import java.util.List;
+import java.util.stream.Collectors;
 
 public class SistemaFacade {
-    private AgendamentoService agendamentoService;
-    private AuthService authService;
-    private PacienteService pacienteService;
-    private MedicoService medicoService;
+    private PacienteRepository pacienteRepo = new PacienteRepository();
+    private MedicoRepository medicoRepo = new MedicoRepository();
+    private ConsultaRepository consultaRepo = new ConsultaRepository();
+    private AgendamentoService agendamentoService = new AgendamentoService(consultaRepo);
 
-    public SistemaFacade() {
-        PacienteRepository pacienteRepo = new PacienteRepository();
-        MedicoRepository medicoRepo = new MedicoRepository();
-        ConsultaRepository consultaRepo = new ConsultaRepository();
-
-        this.agendamentoService = new AgendamentoService(consultaRepo);
-        this.authService = new AuthService();
-        this.pacienteService = new PacienteService(pacienteRepo);
-        this.medicoService = new MedicoService(medicoRepo);
+    public void cadastrarPaciente(String n, String c, String l, String s) {
+        pacienteRepo.salvar(new Paciente(n, c, l, s));
     }
 
-    public void cadastrarPaciente(String nome, String cpf, String login, String senha) {
-        Paciente p = new Paciente(nome, cpf, login, senha);
-        pacienteService.cadastrarPaciente(p);
-        System.out.println("[SISTEMA] Paciente cadastrado: " + nome);
+    public void cadastrarMedico(String n, String e, String l, String s) {
+        medicoRepo.salvar(new Medico(n, e, l, s));
     }
 
-    public void cadastrarMedico(String nome, String especialidade, String login, String senha) {
-        Medico m = new Medico(nome, especialidade, login, senha);
-        medicoService.cadastrarMedico(m);
-        System.out.println("[SISTEMA] Médico cadastrado: " + nome);
-    }
-
-    public void agendarConsulta(Paciente paciente, Medico medico, LocalDateTime data) {
-        if (agendamentoService.verificarDisponibilidade(data)) {
-            Consulta novaConsulta = ConsultaFactory.criarConsulta(paciente, medico, data);
-            agendamentoService.agendar(novaConsulta);
-            System.out.println("[SUCESSO] Agendamento realizado: " + novaConsulta);
+    public Usuario realizarLogin(String login, String senha) {
+        for (Paciente p : pacienteRepo.listarTodos()) {
+            if (p.getLogin().equals(login) && p.validarLogin(login, senha)) return p;
         }
+        for (Medico m : medicoRepo.listarTodos()) {
+            if (m.getLogin().equals(login) && m.validarLogin(login, senha)) return m;
+        }
+        return null;
     }
 
-    public void cancelarConsulta(int id) {
-        System.out.println("[FACADE] Consulta ID " + id + " cancelada com sucesso.");
+    public boolean agendar(Paciente p, Medico m, LocalDateTime dt) {
+        if (agendamentoService.verificarDisponibilidade(m.getNome(), dt)) {
+            agendamentoService.agendar(new Consulta(p, m, dt));
+            return true;
+        }
+        return false;
     }
 
-    public Paciente obterPaciente(String cpf) {
-        return pacienteService.buscarPorCpf(cpf);
+    public List<Consulta> verAgenda(String nomeMedico) {
+        return consultaRepo.listarTodas().stream()
+                .filter(c -> c.getMedico().getNome().trim().equalsIgnoreCase(nomeMedico.trim()))
+                .collect(Collectors.toList());
+    }
+
+    public List<Medico> listarMedicos() {
+        return medicoRepo.listarTodos();
     }
 }
