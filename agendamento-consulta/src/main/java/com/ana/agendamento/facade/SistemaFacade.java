@@ -1,22 +1,29 @@
 package com.ana.agendamento.facade;
 
-import com.ana.agendamento.model.Paciente;
-import com.ana.agendamento.model.Medico;
+import com.ana.agendamento.model.*;
 import com.ana.agendamento.factory.ConsultaFactory;
+import com.ana.agendamento.repository.*;
+import com.ana.agendamento.service.*;
 import java.time.LocalDateTime;
 
 public class SistemaFacade {
-   
-    public void agendarConsulta(Paciente paciente, Medico medico, LocalDateTime data) {
-       
-        var novaConsulta = ConsultaFactory.criarConsulta(paciente, medico, data);
-        
-        System.out.println("\n[FACADE] Processando novo agendamento...");
-        System.out.println("[SUCESSO] " + novaConsulta);
+    private AgendamentoService agendamentoService;
+    private AuthService authService;
+
+    public SistemaFacade() {
+        this.agendamentoService = new AgendamentoService(new ConsultaRepository());
+        this.authService = new AuthService();
     }
 
-    public void cancelarConsulta(int idConsulta) {
-        System.out.println("\n[FACADE] Cancelando consulta ID: " + idConsulta);
-        System.out.println("[SUCESSO] Agendamento removido do sistema.");
+    public void agendarConsulta(Paciente paciente, Medico medico, LocalDateTime data) {
+        if (agendamentoService.verificarDisponibilidade(data)) {
+            Consulta novaConsulta = ConsultaFactory.criarConsulta(paciente, medico, data);
+            agendamentoService.agendar(novaConsulta);
+            System.out.println("[SUCESSO] Agendamento realizado: " + novaConsulta);
+        }
+    }
+
+    public void cancelarConsulta(int id) {
+        System.out.println("[FACADE] Cancelando consulta ID: " + id);
     }
 }
