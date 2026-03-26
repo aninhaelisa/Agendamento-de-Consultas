@@ -1,5 +1,5 @@
 package com.ana.agendamento.observer;
 
-public class PacienteObserver {
-    
+public interface PacienteObserver {
+    void atualizar(String mensagem);
 }
