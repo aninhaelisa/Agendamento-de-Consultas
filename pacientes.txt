@@ -9,3 +9,6 @@ Lucas;123.456.789-10;Lucas;123
 ana;123.456.789-10;ana;123
 Pedro Salviato;123.567.890-10;pedroSalviato;123
 Ana Elisa;128.160.419-48;55812890;123
+Pedro Tavares Peixoto;223.669.145-98;PedroTavares;669145
+Eduardo Araujo Pinto;559-879-889-12;Eduardo;12885
+Ana Elisa;128.160.419-48;AnaElisa;55812890

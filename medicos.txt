@@ -1,7 +1,7 @@
 Kaio Augusto;cardiologia;KaioAugusto;456
-Marina Souza;Neurologia;Mariana;456
 Grabriela;Geral;Gabriela;456
-Mariana Souza;Geral;Mariana;456
 Rafael Loures;Neurologia;Rafael;456
-Mariana Silva Santana;Neurologista;Mariana;456
 Joaquim Kioto Santos;Geral;Joaquim;456
+Mariana Alves Costa;Neurologista;Mariana;333612
+Rafael Gomes Silva;Geral;RafaelGomes;581329
+Juliana Barbosa Freitas;Cardiologista;JulianaB;21389321
