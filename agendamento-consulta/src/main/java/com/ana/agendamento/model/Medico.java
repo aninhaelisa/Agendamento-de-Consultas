@@ -10,6 +10,11 @@ public class Medico extends Usuario {
         this.especialidade = especialidade;
     }
 
-    public String getNome() { return nome; }
-    public String getEspecialidade() { return especialidade; }
+    public String getNome() {
+        return nome;
+    }
+
+    public String getEspecialidade() {
+        return especialidade;
+    }
 }

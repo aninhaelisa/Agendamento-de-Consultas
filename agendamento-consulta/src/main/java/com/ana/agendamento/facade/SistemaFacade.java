@@ -23,10 +23,14 @@ public class SistemaFacade {
 
     public Usuario realizarLogin(String login, String senha) {
         for (Paciente p : pacienteRepo.listarTodos()) {
-            if (p.getLogin().equals(login) && p.validarLogin(login, senha)) return p;
+            if (p.getLogin().equals(login) && p.validarLogin(login, senha)) {
+                return p;
+            }
         }
         for (Medico m : medicoRepo.listarTodos()) {
-            if (m.getLogin().equals(login) && m.validarLogin(login, senha)) return m;
+            if (m.getLogin().equals(login) && m.validarLogin(login, senha)) {
+                return m;
+            }
         }
         return null;
     }

@@ -10,6 +10,11 @@ public class Paciente extends Usuario {
         this.cpf = cpf;
     }
 
-    public String getNome() { return nome; }
-    public String getCpf() { return cpf; }
+    public String getNome() {
+        return nome;
+    }
+
+    public String getCpf() {
+        return cpf;
+    }
 }

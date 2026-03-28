@@ -13,5 +13,7 @@ public abstract class Usuario {
         return this.login.equals(login) && this.senha.equals(senha);
     }
 
-    public String getLogin() { return login; }
+    public String getLogin() {
+        return login;
+    }
 }
