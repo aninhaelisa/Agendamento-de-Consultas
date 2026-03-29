@@ -1,74 +1,140 @@
 package com.ana.agendamento.facade;
 
-import com.ana.agendamento.model.*;
-import com.ana.agendamento.repository.*;
-import com.ana.agendamento.service.*;
+import com.ana.agendamento.model.Consulta;
+import com.ana.agendamento.model.Medico;
+import com.ana.agendamento.model.Paciente;
+import com.ana.agendamento.model.Usuario;
+import com.ana.agendamento.repository.ConsultaRepository;
+import com.ana.agendamento.repository.MedicoRepository;
+import com.ana.agendamento.repository.PacienteRepository;
+import com.ana.agendamento.service.AgendamentoService;
+import com.ana.agendamento.service.AuthService;
+import com.ana.agendamento.service.MedicoService;
+import com.ana.agendamento.service.PacienteService;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
 import java.util.List;
-import java.util.stream.Collectors;
 
 public class SistemaFacade {
+    private PacienteRepository pacienteRepository;
+    private MedicoRepository medicoRepository;
+    private ConsultaRepository consultaRepository;
 
-    private PacienteRepository pacienteRepo = new PacienteRepository();
-    private MedicoRepository medicoRepo = new MedicoRepository();
-    private ConsultaRepository consultaRepo = new ConsultaRepository();
-    private AgendamentoService agendamentoService = new AgendamentoService(consultaRepo);
+    private PacienteService pacienteService;
+    private MedicoService medicoService;
+    private AuthService authService;
+    private AgendamentoService agendamentoService;
 
-    public void cadastrarPaciente(String n, String c, String l, String s) {
-        pacienteRepo.salvar(new Paciente(n, c, l, s));
+    public SistemaFacade() {
+        pacienteRepository = new PacienteRepository();
+        medicoRepository = new MedicoRepository();
+        consultaRepository = new ConsultaRepository(pacienteRepository, medicoRepository);
+
+        pacienteService = new PacienteService(pacienteRepository);
+        medicoService = new MedicoService(medicoRepository);
+        authService = new AuthService();
+        agendamentoService = new AgendamentoService(consultaRepository);
     }
 
-    public void cadastrarMedico(String n, String e, String l, String s) {
-        medicoRepo.salvar(new Medico(n, e, l, s));
+    public void cadastrarPaciente(String nome, String cpf, String telefone, String email, String senha) {
+        int id = pacienteRepository.gerarNovoId();
+        Paciente paciente = new Paciente(id, nome, cpf, telefone, email, senha);
+        pacienteService.cadastrarPaciente(paciente);
     }
 
-    public Usuario realizarLogin(String login, String senha) {
-        for (Paciente p : pacienteRepo.listarTodos()) {
-            if (p.getLogin().equals(login) && p.validarLogin(login, senha)) return p;
+    public void atualizarPaciente(int id, String nome, String cpf, String telefone, String email, String senha) {
+        Paciente paciente = new Paciente(id, nome, cpf, telefone, email, senha);
+        pacienteService.atualizarPaciente(id, paciente);
+    }
+
+    public Paciente buscarPaciente(int id) {
+        return pacienteService.buscarPaciente(id);
+    }
+
+    public void cadastrarMedico(String nome, String especialidade, String email, String senha) {
+        int id = medicoRepository.gerarNovoId();
+        Medico medico = new Medico(id, nome, especialidade, email, senha);
+        medicoService.cadastrarMedico(medico);
+    }
+
+    public void atualizarMedico(int id, String nome, String especialidade, String email, String senha) {
+        Medico medico = new Medico(id, nome, especialidade, email, senha);
+        medicoService.atualizarMedico(id, medico);
+    }
+
+    public Medico buscarMedico(int id) {
+        return medicoService.buscarMedico(id);
+    }
+
+    public List<Medico> listarMedicos() {
+        return medicoService.listarMedicos();
+    }
+
+    public Usuario realizarLogin(String email, String senha) {
+        Paciente paciente = pacienteService.buscarPorEmail(email);
+        if (paciente != null) {
+            return authService.login(email, senha, paciente);
         }
 
-        for (Medico m : medicoRepo.listarTodos()) {
-            if (m.getLogin().equals(login) && m.validarLogin(login, senha)) return m;
+        Medico medico = medicoService.buscarPorEmail(email);
+        if (medico != null) {
+            return authService.login(email, senha, medico);
         }
 
         return null;
     }
 
-    public boolean agendar(Paciente p, Medico m, LocalDateTime dt) {
-        if (agendamentoService.verificarDisponibilidade(m.getNome(), dt)) {
-            agendamentoService.agendar(new Consulta(p, m, dt));
+    public void logout() {
+        authService.logout();
+    }
+
+    public boolean validarUsuario(Usuario usuario) {
+        return authService.validarUsuario(usuario);
+    }
+
+    public boolean agendarConsulta(Paciente paciente, Medico medico, LocalDateTime dataHora) {
+        return agendamentoService.agendarConsulta(paciente, medico, dataHora) != null;
+    }
+
+    public void agendarConsulta(Object dados) {
+    }
+
+    public boolean cancelarConsulta(int idConsulta) {
+        Consulta consulta = agendamentoService.buscarConsultaPorId(idConsulta);
+        if (consulta != null) {
+            agendamentoService.cancelarConsulta(consulta);
             return true;
         }
         return false;
     }
 
-    public List<Consulta> verAgenda(String nomeMedico) {
-        return consultaRepo.listarTodas().stream()
-                .filter(c -> c.getMedico().getNome().trim().equalsIgnoreCase(nomeMedico.trim()))
-                .collect(Collectors.toList());
+    public boolean cancelarConsulta(Consulta consulta) {
+        if (consulta != null) {
+            agendamentoService.cancelarConsulta(consulta);
+            return true;
+        }
+        return false;
     }
 
-    public List<Medico> listarMedicos() {
-        return medicoRepo.listarTodos();
+    public boolean reagendarConsulta(Consulta consulta, LocalDateTime novaData) {
+        return agendamentoService.reagendarConsulta(consulta, novaData);
     }
 
-    // NOVO MÉTODO AQUI
     public List<LocalDateTime> horariosDisponiveis(Medico medico, LocalDate data) {
-        List<LocalDateTime> horarios = new ArrayList<>();
+        return agendamentoService.gerarHorariosDisponiveis(medico, data);
+    }
 
-        int[] horas = {8, 9, 10, 11, 14, 15, 16, 17};
-
-        for (int hora : horas) {
-            LocalDateTime dt = data.atTime(hora, 0);
-
-            if (agendamentoService.verificarDisponibilidade(medico.getNome(), dt)) {
-                horarios.add(dt);
+    public List<Consulta> verAgenda(String nomeMedico) {
+        for (Medico medico : medicoService.listarMedicos()) {
+            if (medico.getNome().equalsIgnoreCase(nomeMedico.trim())) {
+                return agendamentoService.listarConsultasPorMedico(medico.getId());
             }
         }
+        return List.of();
+    }
 
-        return horarios;
+    public List<Consulta> verConsultasPaciente(Paciente paciente) {
+        return agendamentoService.listarConsultasPorPaciente(paciente.getId());
     }
 }
